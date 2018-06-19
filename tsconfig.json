@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outDir": "lib/",
+        "module": "esnext",
+        "target": "es5",
+        "lib": ["es2017", "dom"],
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "noUnusedLocals": true,
+        "allowSyntheticDefaultImports": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "experimentalDecorators": true
+    },
+    "exclude": ["node_modules"]
+}

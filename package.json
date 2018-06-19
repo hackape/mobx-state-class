@@ -1,0 +1,31 @@
+{
+  "name": "mobx-class",
+  "version": "0.1.0",
+  "description": "mobx tucked away",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hackape/mobx-class.git"
+  },
+  "keywords": [
+    "mobx",
+    "reactive",
+    "state management"
+  ],
+  "author": "hackape",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hackape/mobx-class/issues"
+  },
+  "homepage": "https://github.com/hackape/mobx-class#readme",
+  "devDependencies": {
+    "mobx": "^5.0.0",
+    "typescript": "^2.9.2"
+  },
+  "peerDependencies": {
+    "mobx": "^5.0.0"
+  }
+}
