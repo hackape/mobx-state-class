@@ -6,26 +6,26 @@ const $reactivated = Symbol("$reactivated");
 // tslint:disable-next-line
 function reactivatePrototype(ctor: Function) {
   if (ctor.prototype[$reactivated]) return;
+  const prototypeKeys = Object.getOwnPropertyNames(ctor.prototype);
+
   ctor.prototype[$reactivated] = true;
-  for (const key in ctor.prototype) {
-    if (ctor.prototype.hasOwnProperty(key)) {
-      // do not touch contructor
-      if (key === "constructor") continue;
+  for (const key of prototypeKeys) {
+    // do not touch contructor
+    if (key === "constructor") continue;
 
-      // get vanilla descriptor
-      const desc = Object.getOwnPropertyDescriptor(ctor.prototype, key) || {};
+    // get vanilla descriptor
+    const desc = Object.getOwnPropertyDescriptor(ctor.prototype, key) || {};
 
-      let enhancedDesc: any = desc;
-      if (desc.get) {
-        // @computed
-        enhancedDesc = computed(ctor.prototype, key, desc);
-      } else if (desc.value && typeof desc.value === "function") {
-        // @action
-        enhancedDesc = boundActionDecorator(ctor.prototype, key, desc);
-      }
-
-      Object.defineProperty(ctor.prototype, key, enhancedDesc);
+    let enhancedDesc: any = desc;
+    if (desc.get) {
+      // @computed
+      enhancedDesc = computed(ctor.prototype, key, desc);
+    } else if (desc.value && typeof desc.value === "function") {
+      // @action
+      enhancedDesc = boundActionDecorator(ctor.prototype, key, desc);
     }
+
+    Object.defineProperty(ctor.prototype, key, enhancedDesc);
   }
 
   return ctor.prototype;
