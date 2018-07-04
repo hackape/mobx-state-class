@@ -1,5 +1,5 @@
 {
-  "name": "mobx-class",
+  "name": "mobx-state-class",
   "version": "0.1.0",
   "description": "mobx tucked away",
   "main": "src/index.ts",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/hackape/mobx-class.git"
+    "url": "git+ssh://git@github.com/hackape/mobx-state-class.git"
   },
   "keywords": [
     "mobx",
@@ -18,9 +18,9 @@
   "author": "hackape",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hackape/mobx-class/issues"
+    "url": "https://github.com/hackape/mobx-state-class/issues"
   },
-  "homepage": "https://github.com/hackape/mobx-class#readme",
+  "homepage": "https://github.com/hackape/mobx-state-class#readme",
   "devDependencies": {
     "mobx": "^5.0.0",
     "typescript": "^2.9.2"
