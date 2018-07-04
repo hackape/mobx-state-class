@@ -6,22 +6,18 @@ type AnyFunc = (...args: any[]) => any;
 export function createAction(fn: AnyFunc): AnyFunc;
 export function createAction(actionName: string, fn: AnyFunc): AnyFunc;
 export function createAction(actionName: any, fn?: any) {
-  if (arguments.length === 1 && typeof actionName === "function") {
+  if (arguments.length === 1) {
     fn = actionName;
-    const wrapperFn = function() {
-      startPromiseHijack();
-      fn.apply(this, arguments);
-      endPromiseHijack();
-    };
-    return action(wrapperFn);
-  } else {
-    const wrapperFn = function() {
-      startPromiseHijack();
-      fn.apply(this, arguments);
-      endPromiseHijack();
-    };
-    return action(actionName, wrapperFn);
+    actionName = "anonymousAction()";
+    return createAction(actionName, fn);
   }
+
+  const wrapperFn = function() {
+    startPromiseHijack(actionName);
+    fn.apply(this, arguments);
+    endPromiseHijack();
+  };
+  return action(actionName, wrapperFn);
 }
 
 export function defineNamedBoundAction(
