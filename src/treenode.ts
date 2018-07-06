@@ -1,5 +1,4 @@
 import { observable, computed, action } from "mobx";
-
 export const $treenode = Symbol("$treenode");
 
 export interface INode {
@@ -14,7 +13,7 @@ export interface INode {
 let nextNodeId = 1;
 export class TreeNode implements INode {
   nodeId = ++nextNodeId;
-  storedValue;
+  storedValue; // intentionally left "unobservable" to prevent deeper ref tracking
   @observable subpath = "";
   @observable _parent = (null as any) as INode;
 
@@ -113,30 +112,18 @@ export function addTreeNode(target) {
 }
 
 export const hasTreeNode = (target: any) => {
+  if (!target) return false;
   return Boolean(target[$treenode]);
-};
-
-const isPrimitive = target => {
-  switch (typeof target) {
-    case "string":
-    case "number":
-    case "boolean":
-    case "undefined":
-      return true;
-  }
-  if (target === null) return true;
-  return false;
 };
 
 export const updateTreePathFactory = (config: { object: any; offset?: number }) => (
   target: any,
   i: number | string
 ) => {
-  if (isPrimitive(target)) return target;
-  const { object, offset = 0 } = config;
-  target = addTreeNode(target);
-
-  const subpath = typeof i === "number" ? String(offset + i) : i;
-  target[$treenode].setParent(object[$treenode], subpath);
+  if (hasTreeNode(target)) {
+    const { object, offset = 0 } = config;
+    const subpath = typeof i === "number" ? String(offset + i) : i;
+    target[$treenode].setParent(object[$treenode], subpath);
+  }
   return target;
 };

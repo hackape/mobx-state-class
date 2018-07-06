@@ -1,6 +1,8 @@
 import { $mobx, set, extendObservable, computed } from "mobx";
-import { TreeNode, $treenode } from "./treenode";
+import { TreeNode, hasTreeNode, $treenode } from "./treenode";
+import { isFunction } from "./utils/is";
 import { boundActionDecorator } from "./utils/action";
+import { defaultEnhancer } from "./utils/enhanceComplexTypes";
 
 const $reactivated = Symbol("$reactivated");
 // tslint:disable-next-line
@@ -20,7 +22,7 @@ function reactivatePrototype(ctor: Function) {
     if (desc.get) {
       // @computed
       enhancedDesc = computed(ctor.prototype, key, desc);
-    } else if (desc.value && typeof desc.value === "function") {
+    } else if (desc.value && isFunction(desc.value)) {
       // @action
       enhancedDesc = boundActionDecorator(ctor.prototype, key, desc);
     }
@@ -49,8 +51,7 @@ const dynamicObservableObjectProxyTraps = {
     if (isReservedKey(name)) return target[name];
     const adm = getAdm(target);
     const observable = adm.values.get(name as string);
-    if (observable && typeof observable.get === "function")
-      return (observable as any).get();
+    if (observable && isFunction(observable.get)) return (observable as any).get();
     // make sure we start listening to future keys
     // note that we only do this here for optimization
     if (typeof name === "string") adm.has(name);
@@ -58,10 +59,13 @@ const dynamicObservableObjectProxyTraps = {
   },
   set(target: any, name: any, value: any) {
     if (typeof name !== "string") return false;
-    if (value instanceof ReactiveNode) {
-      const childTreeNode = (value as ReactiveNode)[$treenode];
+    value = defaultEnhancer(value);
+
+    if (hasTreeNode(value)) {
+      const childTreeNode = value[$treenode];
       childTreeNode.setParent(target[$treenode], name);
     }
+
     set(target, name, value);
     return true;
   },
@@ -77,7 +81,7 @@ const dynamicObservableObjectProxyTraps = {
     return Reflect.ownKeys(target);
   },
   preventExtensions(target?: any) {
-    console.log(`[ReactiveNode] Dynamic observable objects cannot be frozen`);
+    console.log(`[MSC ReactiveNode] Dynamic observable objects cannot be frozen`);
     return false;
   }
 };
@@ -85,7 +89,7 @@ const dynamicObservableObjectProxyTraps = {
 export default abstract class ReactiveNode {
   [$treenode]: TreeNode;
 
-  constructor() {
+  constructor(initState?: any) {
     // 1. reactivate, decorate ALL instance getters and methods with @computed, and @action
     reactivatePrototype(this.constructor);
     // 2. assign this[$mobx], for later usage
@@ -97,6 +101,8 @@ export default abstract class ReactiveNode {
     // 5. keep internal ref of the instance
     self[$mobx].proxy = proxy;
     self[$treenode].storedValue = proxy;
+    // 6. copy initState props to instance
+    if (initState) Object.assign(proxy, initState);
     return proxy;
   }
 
