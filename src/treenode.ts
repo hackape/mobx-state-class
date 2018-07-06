@@ -80,35 +80,34 @@ export class TreeNode implements INode {
 export function addTreeNode(target) {
   if (target[$treenode]) return target;
 
-  target[$treenode] = new TreeNode();
+  const treenode = new TreeNode();
   const treenodeProxyAPIs = {
     parent: function getParent() {
-      return this[$treenode].parent.storedValue;
+      return treenode.parent.storedValue;
     },
 
     isRoot: function getIsRoot() {
-      return this[$treenode].isRoot;
+      return treenode.isRoot;
     },
 
     path: function getPath() {
-      return this[$treenode].path;
+      return treenode.path;
     },
 
     root: function getRoot() {
-      return this[$treenode].root.storedValue;
+      return treenode.root.storedValue;
     }
   };
 
-  Object.keys(treenodeProxyAPIs).forEach(key => {
-    Object.defineProperty(target, key, {
-      enumerable: false,
-      configurable: true,
-      get: treenodeProxyAPIs[key]
-    });
+  treenode.storedValue = new Proxy(target, {
+    get(target: any, name: any) {
+      if (name === $treenode) return treenode;
+      if (treenodeProxyAPIs.hasOwnProperty(name)) return treenodeProxyAPIs[name]();
+      return Reflect.get(target, name);
+    }
   });
 
-  self[$treenode].storedValue = target;
-  return target;
+  return treenode.storedValue;
 }
 
 export const hasTreeNode = (target: any) => {
