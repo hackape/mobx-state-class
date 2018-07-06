@@ -1,4 +1,3 @@
-import addHiddenProp from "./addHiddenProp";
 import { action } from "mobx";
 import { startPromiseHijack, endPromiseHijack } from "./hijackPromiseThen";
 
@@ -26,11 +25,12 @@ export function defineNamedBoundAction(
   actionName: string,
   fn: Function
 ) {
-  addHiddenProp(
-    target,
-    propertyName,
-    createAction(actionName, fn.bind(target))
-  );
+  Object.defineProperty(target, propertyName, {
+    enumerable: false,
+    writable: true,
+    configurable: true,
+    value: createAction(actionName, fn.bind(target))
+  });
 }
 
 export function boundActionDecorator(target, propertyName, descriptor) {
