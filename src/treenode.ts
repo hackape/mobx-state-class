@@ -78,7 +78,7 @@ export class TreeNode implements INode {
   }
 }
 
-export function addTreeNodeAdministration(target) {
+export function addTreeNode(target) {
   if (target[$treenode]) return target;
 
   target[$treenode] = new TreeNode();
@@ -111,3 +111,32 @@ export function addTreeNodeAdministration(target) {
   self[$treenode].storedValue = target;
   return target;
 }
+
+export const hasTreeNode = (target: any) => {
+  return Boolean(target[$treenode]);
+};
+
+const isPrimitive = target => {
+  switch (typeof target) {
+    case "string":
+    case "number":
+    case "boolean":
+    case "undefined":
+      return true;
+  }
+  if (target === null) return true;
+  return false;
+};
+
+export const updateTreePathFactory = (config: { object: any; offset?: number }) => (
+  target: any,
+  i: number | string
+) => {
+  if (isPrimitive(target)) return target;
+  const { object, offset = 0 } = config;
+  target = addTreeNode(target);
+
+  const subpath = typeof i === "number" ? String(offset + i) : i;
+  target[$treenode].setParent(object[$treenode], subpath);
+  return target;
+};
