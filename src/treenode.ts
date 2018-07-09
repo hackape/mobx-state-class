@@ -1,4 +1,4 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, $mobx } from "mobx";
 export const $treenode = Symbol("$treenode");
 
 export interface INode {
@@ -78,9 +78,11 @@ export class TreeNode implements INode {
 }
 
 export function addTreeNode(target) {
-  if (target[$treenode]) return target;
+  if (hasTreeNode(target)) return target;
 
   const treenode = new TreeNode();
+  target[$mobx][$treenode] = treenode;
+
   const treenodeProxyAPIs = {
     parent: function getParent() {
       return treenode.parent.storedValue;
@@ -101,7 +103,7 @@ export function addTreeNode(target) {
 
   treenode.storedValue = new Proxy(target, {
     get(target: any, name: any) {
-      if (name === $treenode) return treenode;
+      if (name === $treenode || name === "$treenode") return treenode;
       if (treenodeProxyAPIs.hasOwnProperty(name)) return treenodeProxyAPIs[name]();
       return Reflect.get(target, name);
     }
@@ -111,8 +113,8 @@ export function addTreeNode(target) {
 }
 
 export const hasTreeNode = (target: any) => {
-  if (!target) return false;
-  return Boolean(target[$treenode]);
+  if (!target || !target[$mobx]) return false;
+  return Boolean(target[$mobx][$treenode]);
 };
 
 export const updateTreePathFactory = (config: { object: any; offset?: number }) => (
@@ -122,7 +124,7 @@ export const updateTreePathFactory = (config: { object: any; offset?: number }) 
   if (hasTreeNode(target)) {
     const { object, offset = 0 } = config;
     const subpath = typeof i === "number" ? String(offset + i) : i;
-    target[$treenode].setParent(object[$treenode], subpath);
+    target[$mobx][$treenode].setParent(object[$mobx][$treenode], subpath);
   }
   return target;
 };

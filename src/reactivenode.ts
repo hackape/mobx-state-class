@@ -62,8 +62,8 @@ const dynamicObservableObjectProxyTraps = {
     value = defaultEnhancer(value);
 
     if (hasTreeNode(value)) {
-      const childTreeNode = value[$treenode];
-      childTreeNode.setParent(target[$treenode], name);
+      const childTreeNode = value[$mobx][$treenode];
+      childTreeNode.setParent(target[$mobx][$treenode], name);
     }
 
     set(target, name, value);
@@ -87,38 +87,42 @@ const dynamicObservableObjectProxyTraps = {
 };
 
 export default abstract class ReactiveNode {
-  [$treenode]: TreeNode;
-
   constructor(initState?: any) {
     // 1. reactivate, decorate ALL instance getters and methods with @computed, and @action
     reactivatePrototype(this.constructor);
     // 2. assign this[$mobx], for later usage
     const self = extendObservable(this, {});
-    // 3. assing this[$treenode], for tree state management
-    self[$treenode] = new TreeNode();
+    // 3. assing this[$mobx][$treenode], for tree state management
+    self[$mobx][$treenode] = new TreeNode();
     // 4. Proxy(self), to mimic the dynamicObservableObject behavior
     const proxy = new Proxy(self, dynamicObservableObjectProxyTraps);
     // 5. keep internal ref of the instance
     self[$mobx].proxy = proxy;
-    self[$treenode].storedValue = proxy;
+    self[$mobx][$treenode].storedValue = proxy;
     // 6. copy initState props to instance
     if (initState) Object.assign(proxy, initState);
     return proxy;
   }
 
+  get $treenode() {
+    return this[$mobx][$treenode];
+  }
+
   get parent() {
-    return this[$treenode].parent.storedValue;
+    const treenode = this[$mobx][$treenode];
+    if (!treenode.parent) return null;
+    return treenode.parent.storedValue;
   }
 
   get isRoot() {
-    return this[$treenode].isRoot;
+    return this[$mobx][$treenode].isRoot;
   }
 
   get path() {
-    return this[$treenode].path;
+    return this[$mobx][$treenode].path;
   }
 
   get root() {
-    return this[$treenode].root.storedValue;
+    return this[$mobx][$treenode].root.storedValue;
   }
 }
