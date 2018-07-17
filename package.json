@@ -1,6 +1,6 @@
 {
   "name": "mobx-state-class",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "mobx tucked away",
   "main": "src/index.ts",
   "scripts": {
@@ -23,9 +23,13 @@
   "homepage": "https://github.com/hackape/mobx-state-class#readme",
   "devDependencies": {
     "mobx": "^5.0.0",
+    "mobx-react": "^5.2.3",
+    "react": "^16.4.1",
     "typescript": "^2.9.2"
   },
   "peerDependencies": {
-    "mobx": "^5.0.0"
+    "mobx": "^5.0.0",
+    "mobx-react": "^5.2.3",
+    "react": "^16.4.1"
   }
 }
