@@ -13,8 +13,9 @@ export function createAction(actionName: any, fn?: any) {
 
   const wrapperFn = function() {
     startPromiseHijack(actionName);
-    fn.apply(this, arguments);
+    const result = fn.apply(this, arguments);
     endPromiseHijack();
+    return result;
   };
   return action(actionName, wrapperFn);
 }
