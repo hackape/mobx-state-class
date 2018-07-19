@@ -23,7 +23,7 @@ MSC is implemented with ES7 Proxy, and is compatible with MobX v5+ only, you nee
 MSC assumes you write your state tree node with ES6 class syntax. It provides a `ReactiveNode` base class for you to extend. You just need to extend `ReactiveNode`, forget about MobX and write your code like normal js.
 
 ```js
-class TodoModel extends ReactiveNode {
+class Todo extends ReactiveNode {
   constructor(initialState) {
     const { todos } = initialState;
     super();
@@ -47,7 +47,7 @@ class TodoModel extends ReactiveNode {
 Above code is (almost) equivalent to below.
 
 ```js
-class TodoModel {
+class Todo {
   @observable todos;
 
   constructor(initialState) {
@@ -144,3 +144,69 @@ class Todo extends ReactiveNode {
 ### Array and Map
 
 Like MobX, MSC provides support to array and map. Anytime an array or a map gets attached to a ReactiveNode as class member, it'll be injected with all 4 tree node properties (`.parent`, `.path`, `.root`, `.isRoot`). It'll also receive an interceptor that handles updating tree relationships and other weight lifting like runtime conversion. Apart from these, they're basically plain MobX Observable Array/Map.
+
+`arrayOf()` and `mapOf()` are exposed to help you create typed array/map. Example:
+
+```js
+class MyTodoApp extends ReactiveNode {
+  constructor() {
+    super();
+    this.namedTodoLists = mapOf(Todo);
+  }
+}
+
+const myTodoApp = new MyTodoApp()
+// This config the map interceptor so that when you invoke:
+myTodoApp.namedTodoLists.set("Shopping List", newValue) 
+
+// it'll be  to to 
+myTodoApp.namedTodoLists.set("Shopping List", new Todo(newValue))
+```
+
+### React Binding
+
+There exists an official `mobx-react` binding lib. MSC provide a `connect()` function on top of that and follow the single state tree philosophy of Redux. See usage example:
+
+```jsx
+import { Provider } from 'mobx-react'
+import { connect, IMobxStateClassConfigs } from 'mobx-state-class'
+import { App } from './MyApp'
+import { AppState } from './AppState'
+
+const appState = new AppState()
+
+const ConnectedApp = connect(state => {
+  return { 
+    todos: state.todos,
+    count: state.todos.length
+  }
+})(App);
+
+// "state" is the required prop key here.
+const AppWithStateProvider = () => (
+  <Provider state={appState}>
+    <ConnectedApp />
+  </Provider>
+);
+```
+
+If you use typescript, you can also inject your app state type info:
+
+```ts
+import { connect, IMobxStateClassConfigs } from 'mobx-state-class'
+
+// if you use typescript, you can
+declare module 'mobx-state-class' {
+  interface IMobxStateClassConfigs {
+    state: AppState
+  }
+}
+
+const connected = connect(state => {
+  return { 
+    todos: state.todos,
+    count: state.todos.length
+  }
+});
+
+```
