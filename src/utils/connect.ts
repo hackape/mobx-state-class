@@ -1,12 +1,9 @@
 import { ComponentType, ComponentClass, SFC } from 'react'
 import { inject, observer } from 'mobx-react'
-
-export interface IConnectContext {
-    [x: string]: any
-}
+import { IMobxStateClassConfigs } from '../typings'
 
 interface IMapStateToProps<I> {
-    (state: IConnectContext['state'], nextProps: any): I
+    (state: IMobxStateClassConfigs['state'], nextProps: any): I
 }
 
 function connectDecorator<P, R>(

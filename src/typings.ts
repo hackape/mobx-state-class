@@ -11,3 +11,7 @@ type _ISnapShot<T> = {
 };
 
 export type ISnapshot<T> = Pick<_ISnapShot<T>, FilterNever<_ISnapShot<T>>>;
+
+export interface IMobxStateClassConfigs {
+  [x: string]: any
+}
