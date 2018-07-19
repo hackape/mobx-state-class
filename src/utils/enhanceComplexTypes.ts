@@ -90,15 +90,16 @@ export function enhanceMap(target: Map<any, any>, ItemCtor?: any) {
 }
 
 export function defaultEnhancer(target: any, ItemCtor?: any) {
-  if (isPrimitive(target) || isFunction(target) || target instanceof ReactiveNode) {
-    return target;
-  }
-  if (isArrayLike(target)) return enhanceArray(target, ItemCtor);
-  if (target instanceof Map) return enhanceMap(target, ItemCtor);
-
   if (isFunction(ItemCtor) && !(target instanceof ItemCtor)) {
     return new ItemCtor(target);
   }
+
+  if (isPrimitive(target) || isFunction(target) || target instanceof ReactiveNode) {
+    return target;
+  }
+  
+  if (isArrayLike(target)) return enhanceArray(target, ItemCtor);
+  if (target instanceof Map) return enhanceMap(target, ItemCtor);
   return target;
 }
 
