@@ -24,69 +24,88 @@ const hasInterceptor = (target: any) => {
   return Boolean(target["disposeReactiveInterceptor"]);
 };
 
-const arrayInterceptor = (change: IArrayWillChange | IArrayWillSplice) => {
-  if (change.type === "splice") {
-    const { added, removedCount, object } = change;
-    const offset = change.index;
-    const addedCount = added.length;
+const arrayInterceptorFactory = (ItemCtor?) => {
+  const arrayInterceptor = (change: IArrayWillChange | IArrayWillSplice) => {
+    if (change.type === "splice") {
+      const { added, removedCount, object } = change;
+      const offset = change.index;
+      const addedCount = added.length;
 
-    // handle newly added items' tree path
-    const updateTreePath = updateTreePathFactory({ object, offset });
-    const newAdded = added.map((item, i) => {
-      return updateTreePath(defaultEnhancer(item), i);
-    });
+      // handle newly added items' tree path
+      const updateTreePath = updateTreePathFactory({ object, offset });
+      const newAdded = added.map((item, i) => {
+        return updateTreePath(defaultEnhancer(item, ItemCtor), i);
+      });
 
-    // update existing items' tree path
-    object
-      .slice(offset + removedCount)
-      .forEach(updateTreePathFactory({ object, offset: offset + addedCount }));
+      // update existing items' tree path
+      object
+        .slice(offset + removedCount)
+        .forEach(updateTreePathFactory({ object, offset: offset + addedCount }));
 
-    return { ...change, added: newAdded };
-  }
+      return { ...change, added: newAdded };
+    }
 
-  if (change.type === "update") {
-    const { index, object } = change;
+    if (change.type === "update") {
+      const { index, object } = change;
 
-    const updateTreePath = updateTreePathFactory({ object, offset: 0 });
-    const newValue = updateTreePath(defaultEnhancer(change.newValue), index);
+      const updateTreePath = updateTreePathFactory({ object, offset: 0 });
+      const newValue = updateTreePath(defaultEnhancer(change.newValue, ItemCtor), index);
 
-    return { ...change, newValue };
-  }
+      return { ...change, newValue };
+    }
 
-  return change;
+    return change;
+  };
+
+  return arrayInterceptor;
 };
 
-export function enhanceArray(target: any[]) {
+export function enhanceArray(target: any[], ItemCtor?: any) {
   if (!isArrayLike(target)) throw Error("[MSC enhanceArray] can only accept array-like object");
   if (!isObservable(target)) target = observable.array(target);
   if (!hasTreeNode(target)) target = addTreeNode(target);
-  if (!hasInterceptor(target)) target = addInterceptor(target as any, arrayInterceptor);
+  if (!hasInterceptor(target)) target = addInterceptor(target as any, arrayInterceptorFactory(ItemCtor));
   return target;
 }
 
-const mapInterceptor = (change: IMapWillChange) => {
-  const { type, object, name, newValue } = change;
-  if (type === "add" || type === "update") {
-    const updateTreePath = updateTreePathFactory({ object });
-    change.newValue = updateTreePath(defaultEnhancer(newValue), name);
-  }
+const mapInterceptorFactory = (ItemCtor?: any) => {
+  const mapInterceptor = (change: IMapWillChange) => {
+    const { type, object, name, newValue } = change;
+    if (type === "add" || type === "update") {
+      const updateTreePath = updateTreePathFactory({ object });
+      change.newValue = updateTreePath(defaultEnhancer(newValue, ItemCtor), name);
+    }
 
-  return change;
-};
+    return change;
+  };
+  return mapInterceptor;
+}
 
-export function enhanceMap(target: Map<any, any>) {
+export function enhanceMap(target: Map<any, any>, ItemCtor?: any) {
   if (!(target instanceof Map)) throw Error("[MSC enhanceMap] can only accept Map type object");
   if (!isObservable(target)) target = observable.map(target);
   if (!hasTreeNode(target)) target = addTreeNode(target);
-  if (!hasInterceptor(target)) target = addInterceptor(target as any, mapInterceptor);
+  if (!hasInterceptor(target)) target = addInterceptor(target as any, mapInterceptorFactory(ItemCtor));
   return target;
 }
 
-export function defaultEnhancer(target: any) {
+export function defaultEnhancer(target: any, ItemCtor?: any) {
   if (isPrimitive(target) || isFunction(target) || target instanceof ReactiveNode) {
     return target;
   }
-  if (isArrayLike(target)) return enhanceArray(target);
-  if (target instanceof Map) return enhanceMap(target);
+  if (isArrayLike(target)) return enhanceArray(target, ItemCtor);
+  if (target instanceof Map) return enhanceMap(target, ItemCtor);
+
+  if (isFunction(ItemCtor) && !(target instanceof ItemCtor)) {
+    return new ItemCtor(target);
+  }
   return target;
+}
+
+export function arrayOf(ItemCtor) {
+  return enhanceArray([], ItemCtor)
+}
+
+export function mapOf(ItemCtor) {
+  return enhanceMap(new Map(), ItemCtor)
 }
